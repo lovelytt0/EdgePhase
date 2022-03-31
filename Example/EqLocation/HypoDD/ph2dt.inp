@@ -1,0 +1,14 @@
+* ph2dt.inp - input control file for program ph2dt
+* Input station file:
+station.dat
+* Input phase file:
+./italy.pha
+*MINWGHT: min. pick weight allowed [0]
+*MAXDIST: max. distance in km between event pair and stations [400]
+*MAXSEP: max. hypocentral separation in km [30]
+*MAXNGH: max. number of neighbors per event [10]
+*MINLNK: min. number of links required to define a neighbor [6]
+*MINOBS: min. number of links per pair saved [6]
+*MAXOBS: max. number of links per pair saved [20]
+*MINWGHT MAXDIST MAXSEP MAXNGH MINLNK MINOBS MAXOBS
+   0      600     400     20     1      1     50
