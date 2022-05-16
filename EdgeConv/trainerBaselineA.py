@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 @author: tianfeng
-last update: 03/31/2022
+last update: 05/16/2022
 """
 import os
 import shutil
@@ -37,7 +37,17 @@ def cycle(loader):
         for data in loader:
             yield data
 
+def conv_block(n_in, n_out, k, stride ,padding, activation, dropout=0):
+    if activation:
+        return nn.Sequential(
+            nn.Conv1d(n_in, n_out, k, stride=stride, padding=padding),
+            activation,
+            nn.Dropout(p=dropout),
 
+        )
+    else:
+        return nn.Conv1d(n_in, n_out, k, stride=stride, padding=padding)
+        
 def trainerBaselineA(input_hdf5=None,
             input_trainset = None,
             input_validset = None,

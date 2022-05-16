@@ -24,7 +24,6 @@ import torch.nn.functional as F
 
 from pytorch_lightning import loggers as pl_loggers
 
-
 import torch
 import torch.nn.functional as F
 from torch_geometric.nn import GCNConv,SAGEConv
@@ -37,7 +36,17 @@ def cycle(loader):
     while True:
         for data in loader:
             yield data
+            
+def conv_block(n_in, n_out, k, stride ,padding, activation, dropout=0):
+    if activation:
+        return nn.Sequential(
+            nn.Conv1d(n_in, n_out, k, stride=stride, padding=padding),
+            activation,
+            nn.Dropout(p=dropout),
 
+        )
+    else:
+        return nn.Conv1d(n_in, n_out, k, stride=stride, padding=padding)
 
 def trainerEdgePhase(input_hdf5=None,
             input_trainset = None,

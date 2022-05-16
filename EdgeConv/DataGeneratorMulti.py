@@ -2,21 +2,12 @@
 # -*- coding: utf-8 -*-
 """
 @author: tianfeng
-last update: 03/31/2022
+last update: 05/16/2022
 """
-from __future__ import division, print_function
 import numpy as np
-import h5py
-import matplotlib
-matplotlib.use('agg')
-from tqdm import tqdm
 import os
-
-from obspy.signal.trigger import trigger_onset
 import torch
-from torch import nn
 from obspy.geodetics.base import locations2degrees
-from itertools import chain
 import pickle
 import random
 
@@ -49,19 +40,10 @@ class DataGeneratorMulti(torch.utils.data.Dataset):
             
     norm_mode: str, default=max
         The mode of normalization, 'max' or 'std'.
-            
-    label_type: str, default=gaussian 
-        Labeling type: 'gaussian', 'triangle', or 'box'.
              
     augmentation: bool, default=True
         If True, half of each batch will be augmented version of the other half.
             
-
-
-    Returns
-    --------        
-    Batches of two dictionaries: {'input': X}: pre-processed waveform as input {'detector': y1, 'picker_P': y2, 'picker_S': y3}: outputs including three separate numpy arrays as labels for detection, P, and S respectively.
-    
     """   
     
     def __init__(self, 
@@ -71,7 +53,6 @@ class DataGeneratorMulti(torch.utils.data.Dataset):
                  batch_size=1, 
                  shuffle=True, 
                  norm_mode = 'std',
-                 label_type = 'triangle',                 
                  augmentation = False,                  
                  ):
        
@@ -81,39 +62,32 @@ class DataGeneratorMulti(torch.utils.data.Dataset):
         self.list_IDs = list_IDs
         self.file_name = file_name        
         self.shuffle = shuffle
-        self.on_epoch_end()
         self.norm_mode = norm_mode
-        self.label_type = label_type       
         self.augmentation = augmentation   
+        self.on_epoch_end()
+
 
     def __len__(self):
         'Denotes the number of batches per epoch'
-#         if self.augmentation:
-#             return 2*int(np.floor(len(self.list_IDs) ))
-#         else:
-#         return int(np.floor(len(self.list_IDs)))
+
         return int(np.floor(len(self.list_IDs) / self.batch_size))
 
     def __getitem__(self, index):
         'Generate one batch of data'
-#         indexes = self.indexes[index*self.batch_size:(index+1)*self.batch_size]   
-#         list_IDs_temp = [self.list_IDs[k] for k in indexes]
 
         X, y, edge_index = self._data_generation(self.list_IDs[index])
-
-
         return torch.tensor(X, dtype=torch.float),torch.tensor(y, dtype=torch.float), torch.tensor(edge_index), self.list_IDs[index]
     
-    def testitem(self, index):
+    def testitem(self, index):        
+    	'Generate one batch of test data'
 
         X, y, edge_index,select_keys = self._testdata_generation(self.list_IDs[index])
-
-
-        return torch.tensor(X, dtype=torch.float),torch.tensor(y, dtype=torch.float), torch.tensor(edge_index), self.list_IDs[index],select_keys
+        return torch.tensor(X, dtype=torch.float),torch.tensor(y, dtype=torch.float), torch.tensor(edge_index), self.list_IDs[index], select_keys
     
 
     def on_epoch_end(self):
         'Updates indexes after each epoch'
+
         self.indexes = np.arange(len(self.list_IDs))
         if self.shuffle == True:
             np.random.shuffle(self.indexes)  
@@ -124,24 +98,20 @@ class DataGeneratorMulti(torch.utils.data.Dataset):
         data -= np.mean(data)
         if mode == 'max':
             max_data = np.max(data)
-#             assert(max_data.shape[-1] == data.shape[-1])
-#             max_data[max_data == 0] = 1
             if max_data == 0:
                 max_data = 1
             data /= max_data              
 
         elif mode == 'std':               
             std_data = np.std(data)
-#             assert(std_data.shape[-1] == data.shape[-1])
             if std_data == 0:
                 std_data = 1
-#             std_data[std_data == 0] = 1
             data /= std_data
         return data
     
     def _label(self, a=0, b=20, c=40):  
         'Used for triangolar labeling'
-        
+
         z = np.linspace(a, c, num = 2*(b-a)+1)
         y = np.zeros(z.shape)
         y[z <= a] = 0
@@ -326,8 +296,6 @@ class DataGeneratorMulti(torch.utils.data.Dataset):
                     y[idx,2]=np.average(10*np.log10(s1**2/p1**2))
                     
                     
-
-
         row_a=[]
         row_b=[]  
         for i in range(key_nb):
