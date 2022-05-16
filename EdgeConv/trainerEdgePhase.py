@@ -2,41 +2,35 @@
 # -*- coding: utf-8 -*-
 """
 @author: tianfeng
-last update: 03/31/2022
+last update:  05/16/2022
 """
 import os
 import shutil
-import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
-import h5py
 import time
-from EdgeConv.DataGeneratorMulti import DataGeneratorMulti
-from torch import nn
+from tqdm import tqdm
 
-from torch.utils.data import DataLoader, Dataset
+from EdgeConv.DataGeneratorMulti import DataGeneratorMulti
+
 import torch
-import torch.optim as optim
+from torch import nn
+import torch.nn.functional as F
+from torch.utils.data import DataLoader
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from pytorch_lightning.callbacks import ModelCheckpoint
-import torch.nn.functional as F
-
 from pytorch_lightning import loggers as pl_loggers
 
-import torch
-import torch.nn.functional as F
-from torch_geometric.nn import GCNConv,SAGEConv
-from torch import nn
+
 from torch_geometric.nn import MessagePassing
 import seisbench.models as sbm
 
-from tqdm import tqdm
+
 def cycle(loader):
     while True:
         for data in loader:
             yield data
-            
+
 def conv_block(n_in, n_out, k, stride ,padding, activation, dropout=0):
     if activation:
         return nn.Sequential(
@@ -54,7 +48,6 @@ def trainerEdgePhase(input_hdf5=None,
             output_name = None, 
             input_dimention=(6000, 3),
             shuffle=True, 
-            label_type='triangle',
             normalization_mode='std',
             augmentation=True,              
             batch_size=1,
@@ -71,7 +64,6 @@ def trainerEdgePhase(input_hdf5=None,
     "output_name": output_name,
     "input_dimention": input_dimention,
     "shuffle": shuffle,
-    "label_type": label_type,
     "normalization_mode": normalization_mode,
     "augmentation": augmentation,
     "batch_size": batch_size,
@@ -90,7 +82,6 @@ def trainerEdgePhase(input_hdf5=None,
                       'batch_size': 1,
                       'shuffle': args['shuffle'],  
                       'norm_mode': args['normalization_mode'],
-                      'label_type': args['label_type'],
                       'augmentation': args['augmentation']}
 
     params_validation = {'file_name': str(args['input_hdf5']),  
@@ -98,14 +89,10 @@ def trainerEdgePhase(input_hdf5=None,
                          'batch_size': 1,
                          'shuffle': False,  
                          'norm_mode': args['normalization_mode'],
-                         'label_type': args['label_type'],
                          'augmentation': False}     
 
 
 
-# change into eval mode
-
-#     model.eval() 
     model = sbm.EQTransformer.from_pretrained("original")
     model_GNN = Graphmodel(pre_model=model)
 
@@ -113,17 +100,6 @@ def trainerEdgePhase(input_hdf5=None,
     training_generator = DataGeneratorMulti(list_IDs=training, **params_training)
     validation_generator = DataGeneratorMulti(list_IDs=validation, **params_validation) 
     
-#     for i in tqdm(range(len(training))):
-#         training_generator.__getitem__(i)
-        
-#     return 
-#     x=training_generator.__getitem__(6207)
-#     print(x)
-#     for k in x:
-#         print(k.shape)
-#         print(torch.sum(k))
-    
-#     return 
     checkpoint_callback = ModelCheckpoint(monitor=monitor,dirpath=save_models,save_top_k=3,verbose=True,save_last=True)
     early_stopping = EarlyStopping(monitor=monitor,patience=args['patience']) # patience=3
     tb_logger = pl_loggers.TensorBoardLogger(save_dir)
@@ -180,25 +156,17 @@ def _make_dir(output_name):
 
 
 
-
-
 class EdgeConv(MessagePassing):
     def __init__(self, in_channels):
         super().__init__(aggr='max',node_dim=-3) #  "Max" aggregation.
         activation= nn.GELU() 
         dropout=0.1
 
-
         self.deconv1 = conv_block(in_channels*2, in_channels*2, 3, 1, 1, activation=activation, dropout=0.1)
         self.deconv2 = conv_block(in_channels*2, in_channels*2, 3, 1, 1, activation=activation,dropout=0.1)
         self.deconv3 = conv_block(in_channels*2, in_channels, 3, 1, 1,activation=activation,dropout=0.1)
         self.deconv4 = conv_block(in_channels, in_channels, 3, 1, 1,  activation=activation,dropout=0.1)
         self.deconv5 = conv_block(in_channels, in_channels, 3, 1, 1, activation=activation,dropout=0.1)
-
-#         self.gMLPmessage = nn.ModuleList([Residual(PreNorm(in_channels*2, gMLPBlock(dim = in_channels*2, heads = 1, dim_ff = in_channels*2, seq_len = 47, attn_dim = None, causal = False))) for i in range(1)])
-#         self.proj_out = nn.Linear(in_channels*2, in_channels)
-#         self.conv3 = conv_block(in_channels, out_channels, 3, 1, 1, activation)
-    
 
     def forward(self, x, edge_index):
         # x has shape [N, in_channels]
@@ -210,18 +178,10 @@ class EdgeConv(MessagePassing):
         # x_i has shape [E, in_channels]
         # x_j has shape [E, in_channels]
 
-#         tmp = torch.cat([x_i, x_j], dim=2)  # tmp has shape [E, 2 * in_channels]
         tmp = torch.cat([x_i, x_j], dim=1)  # tmp has shape [E, 2 * in_channels]
-#         tmp = nn.Sequential(*self.gMLPmessage)(tmp)
-#         return self.proj_out(tmp)
+
         ans = self.deconv5(self.deconv4(self.deconv3(self.deconv2(self.deconv1(tmp)))))
         return ans
-    
-    
-    
-    
-
-
 
 
 
@@ -233,12 +193,6 @@ class Graphmodel(pl.LightningModule):
         super().__init__()
         
         self.edgeconv1 = EdgeConv(16)
-#         for name, p in pre_model.named_parameters():
-#             if "encoder" in name  or "gMLPlayers" in name :
-#                 p.requires_grad = False
-#                 print(name)
-#             else:
-#                 p.requires_grad = True
         
         self.encoder = pre_model.encoder
         self.res_cnn_stack = pre_model.res_cnn_stack

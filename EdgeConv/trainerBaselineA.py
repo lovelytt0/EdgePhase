@@ -6,30 +6,25 @@ last update: 05/16/2022
 """
 import os
 import shutil
-import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
-import h5py
 import time
-from EdgeConv.DataGeneratorMulti import DataGeneratorMulti
-from torch import nn
+from tqdm import tqdm
 
-from torch.utils.data import DataLoader, Dataset
+from EdgeConv.DataGeneratorMulti import DataGeneratorMulti
+
 import torch
-import torch.optim as optim
+from torch import nn
+import torch.nn.functional as F
+from torch.utils.data import DataLoader
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from pytorch_lightning.callbacks import ModelCheckpoint
-import torch.nn.functional as F
-
 from pytorch_lightning import loggers as pl_loggers
 
-import torch
-import torch.nn.functional as F
-from torch_geometric.nn import GCNConv,SAGEConv
-from torch import nn
+
 from torch_geometric.nn import MessagePassing
 import seisbench.models as sbm
+
 
 from tqdm import tqdm
 def cycle(loader):
@@ -47,14 +42,13 @@ def conv_block(n_in, n_out, k, stride ,padding, activation, dropout=0):
         )
     else:
         return nn.Conv1d(n_in, n_out, k, stride=stride, padding=padding)
-        
+
 def trainerBaselineA(input_hdf5=None,
             input_trainset = None,
             input_validset = None,
             output_name = None, 
             input_dimention=(6000, 3),
             shuffle=True, 
-            label_type='triangle',
             normalization_mode='std',
             augmentation=True,               
             batch_size=1,
@@ -70,7 +64,6 @@ def trainerBaselineA(input_hdf5=None,
     "output_name": output_name,
     "input_dimention": input_dimention,
     "shuffle": shuffle,
-    "label_type": label_type,
     "normalization_mode": normalization_mode,
     "augmentation": augmentation,
     "batch_size": batch_size,
@@ -91,7 +84,6 @@ def trainerBaselineA(input_hdf5=None,
                       'batch_size': 1,
                       'shuffle': args['shuffle'],  
                       'norm_mode': args['normalization_mode'],
-                      'label_type': args['label_type'],
                       'augmentation': args['augmentation']}
 
     params_validation = {'file_name': str(args['input_hdf5']),  
@@ -99,12 +91,9 @@ def trainerBaselineA(input_hdf5=None,
                          'batch_size': 1,
                          'shuffle': False,  
                          'norm_mode': args['normalization_mode'],
-                         'label_type': args['label_type'],
                          'augmentation': False}         
 
-# change into eval mode
 
-#     model.eval() 
     model = sbm.EQTransformer.from_pretrained("original")
     model_GNN = Graphmodel(pre_model=model)
 
@@ -174,12 +163,6 @@ class Graphmodel(pl.LightningModule):
     ):
         super().__init__()
         
-#         for name, p in pre_model.named_parameters():
-#             if "encoder" in name  or "gMLPlayers" in name :
-#                 p.requires_grad = False
-#                 print(name)
-#             else:
-#                 p.requires_grad = True
         
         self.encoder = pre_model.encoder
         self.res_cnn_stack = pre_model.res_cnn_stack
