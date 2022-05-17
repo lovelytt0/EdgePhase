@@ -1,61 +1,28 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Wed Apr 25 17:44:14 2018
 
-@author: mostafamousavi
-last update: 05/27/2021
+@author: tianfeng
+last update: 05/16/2022
 
 """
 
-
-
-
-from __future__ import print_function
 import os
-# os.environ['KERAS_BACKEND']='tensorflow'
-# from tensorflow.keras import backend as K
-# from tensorflow.keras.models import load_model
-# from tensorflow.keras.optimizers import Adam
-# import tensorflow as tf
-
 import sys
 sys.path.append('/home/tian_feng/UCLA/gMLP_phase/gMLP_phase/')
-import matplotlib
-matplotlib.use('agg')
 import numpy as np
-import csv
-import h5py
-import time
-import shutil
-# from .EqT_utils import f1, SeqSelfAttention, FeedForward, LayerNormalization
-from gMLPhase.EqT_utils import generate_arrays_from_file, picker
 np.warnings.filterwarnings('ignore')
-import datetime
 from tqdm import tqdm
-# from tensorflow.python.util import deprecation
-# deprecation._PRINT_DEPRECATION_WARNINGS = False
-from gMLPhase.gMLP_torch import gMLPmodel
-from EdgeConv.trainerEQT import Graphmodel
-
-from torch import nn
-import torch
-import pytorch_lightning as pl
-from torch.utils import mkldnn as mkldnn_utils
-from torch.utils.data import DataLoader, Dataset
-from EdgeConv.DataGeneratorMulti import DataGeneratorMulti
-
-from tqdm import tqdm
-import seisbench.models as sbm
-
-import obspy
-from glob import glob
-import pickle
-
-from matplotlib import pyplot as plt 
-import random
 import pandas as pd
 import gc 
+
+import torch
+from torch import nn
+
+import seisbench.models as sbm
+from EdgeConv.trainerEdgePhase import Graphmodel
+import obspy
+
 
 def _trim_nan(x):
         """
@@ -73,19 +40,9 @@ def _trim_nan(x):
 
         return x, np.sum(mask_forward.astype(int)), np.sum(mask_backward.astype(int))
     
-output_name ='/home/tian_feng/UCLA/gMLP_phase/gMLP_phase/GNN/Try_EQT_2'
-
-# gnn_weight_path = '/home/tian_feng/UCLA/gMLP_phase/gMLP_phase/GNN/Try_EQT_2/checkpoints/epoch=38-step=27845.ckpt'
-gnn_weight_path = '/home/tian_feng/UCLA/gMLP_phase/gMLP_phase/GNN/Try_EQT_2/checkpoints/epoch=72-step=52121.ckpt'
-
-# save_dir = os.path.join(os.getcwd(), output_name)
-# save_figs = os.path.join(save_dir, 'figures')
-
-# if os.path.isdir(save_figs):
-#     shutil.rmtree(save_figs)  
-# os.makedirs(save_figs) 
-
-# print('Loading the model ...', flush=True)        
+output_name ='./Test1'
+gnn_weight_path = '../models/epoch=72-step=52121.ckpt'
+      
 df=pd.read_csv('station.csv')
 edge_index= torch.load('edge_index.pt')
 print(edge_index)
@@ -99,7 +56,6 @@ state = torch.load(gnn_weight_path)['state_dict']
 gnn_model.load_state_dict( state_dict = state)
 gnn_model.eval()
 
-# date_folder = ['20201030','20201031']+ [str(i) for i in range(20201101,20201106)]
 date_folder =  [str(i) for i in range(20201116,20201131)]
 
 
@@ -190,15 +146,9 @@ for days in date_folder[:]:
         # del pred_merge
 
         label_name=["GNN_P","GNN_S"]
-
-
         pred_rate =100
         print('writing to mseed')
-        import warnings
-        # with warnings.catch_warnings():
-        #     warnings.filterwarnings(
-        #         action="ignore", message="Mean of empty slice"
-        #     )
+
         for k in range(len(df['station'])):
             print(k,trace_stats[k].network+'_'+trace_stats[k].station)
             output = obspy.Stream()
