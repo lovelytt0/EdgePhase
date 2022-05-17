@@ -1,19 +1,21 @@
-import numpy as np
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+
+@author: tianfeng
+last update: 05/16/2022
+
+"""
+
 import pandas as pd
-import matplotlib.pyplot as plt
 import os
-from glob import glob
-import shutil
 import obspy
 import tqdm
-import torch
 
 df=pd.read_csv('station.csv')
 
-# path = '/home/tian_feng/UCLA/Greece-2020-10-30'
 path = './'
 datapath = os.path.join(path,'Data2')
-# date_folder = ['20201030','20201031']+ [str(i) for i in range(20201101,20201106)]
 date_folder =  [str(i) for i in range(20201116,20201131)]
 
 miss_sta = set()
@@ -47,5 +49,4 @@ for date in date_folder[:]:
             hourpath = os.path.join(directory,str(index+1)+'h')
             if not os.path.exists(hourpath):
                 os.makedirs(hourpath)
-#             windowed_st.write(os.path.join(hourpath, st[0].stats.network+'_'+st[0].stats.station+'.mseed'), format='MSEED') 
             windowed_st.write(os.path.join(hourpath, net+'_'+sta+'.mseed'), format='MSEED') 

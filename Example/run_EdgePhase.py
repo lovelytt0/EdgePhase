@@ -23,6 +23,24 @@ import seisbench.models as sbm
 from EdgeConv.trainerEdgePhase import Graphmodel
 import obspy
 
+    
+output_name ='./Test1'
+gnn_weight_path = '../models/epoch=72-step=52121.ckpt'
+      
+df=pd.read_csv('station.csv')
+edge_index= torch.load('edge_index.pt')
+
+# load model
+sig = nn.Sigmoid()
+eqt_model = sbm.EQTransformer.from_pretrained("original")
+eqt_model.eval()
+gnn_model = Graphmodel(eqt_model)
+state = torch.load(gnn_weight_path)['state_dict']
+gnn_model.load_state_dict( state_dict = state)
+gnn_model.eval()
+
+date_folder =  [str(i) for i in range(20201116,20201131)]
+
 
 def _trim_nan(x):
         """
@@ -39,32 +57,14 @@ def _trim_nan(x):
         x = x[~mask_backward]
 
         return x, np.sum(mask_forward.astype(int)), np.sum(mask_backward.astype(int))
-    
-output_name ='./Test1'
-gnn_weight_path = '../models/epoch=72-step=52121.ckpt'
-      
-df=pd.read_csv('station.csv')
-edge_index= torch.load('edge_index.pt')
-print(edge_index)
-
-# load model
-sig = nn.Sigmoid()
-eqt_model = sbm.EQTransformer.from_pretrained("original")
-eqt_model.eval()
-gnn_model = Graphmodel(eqt_model)
-state = torch.load(gnn_weight_path)['state_dict']
-gnn_model.load_state_dict( state_dict = state)
-gnn_model.eval()
-
-date_folder =  [str(i) for i in range(20201116,20201131)]
 
 
 for days in date_folder[:]:
-    print(days)
+    print('running day: ',days)
     for hour in range(1,25):
 
         date= days +'/'+str(hour)+'h'
-        directory = os.path.join('pred2', date)
+        directory = os.path.join(output_name, date)
         if not os.path.exists(directory):
             os.makedirs(directory)
 
@@ -72,8 +72,6 @@ for days in date_folder[:]:
         print('reading waveforms')
         for net,sta in tqdm(zip(df['network'],df['station'])): 
             bg_st += obspy.read(os.path.join('conti_data',date,net+'_'+sta+'.mseed'))
-
-        print(bg_st,len(bg_st))
 
         split_points=list(range(3,len(bg_st),3))
         preds = []
@@ -113,7 +111,6 @@ for days in date_folder[:]:
         del bg_st
         gc.collect()
 
-        print(preds[0].shape)
 
         prediction_sample_factor=1
         # Maximum number of predictions covering a point
@@ -150,7 +147,7 @@ for days in date_folder[:]:
         print('writing to mseed')
 
         for k in range(len(df['station'])):
-            print(k,trace_stats[k].network+'_'+trace_stats[k].station)
+            # print(k,trace_stats[k].network+'_'+trace_stats[k].station)
             output = obspy.Stream()
             pred = np.nanmean(pred_merge[k], axis=-1)
         #     trace_stats = bg_st[k].stats

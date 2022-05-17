@@ -1,10 +1,20 @@
-from matplotlib import pyplot as plt
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+
+@author: tianfeng
+last update: 05/16/2022
+
+"""
+
 import numpy as np
-from glob import glob
-from sklearn.cluster import DBSCAN
-import pandas as pd
 import obspy
 import os
+
+base_folder='phase_30day'
+df=pd.read_csv('station.csv')
+date_folder = ['20201030','20201031']
+
 
 def _detect_peaks(x, mph=None, mpd=1, threshold=0, edge='rising', kpsh=False, valley=False):
 
@@ -100,11 +110,6 @@ def _detect_peaks(x, mph=None, mpd=1, threshold=0, edge='rising', kpsh=False, va
     return ind
 
 
-
-
-
-
-
 def pick_picks(ts,tt,min_proba_p,min_prob_s,sample_rate):
     
     
@@ -123,9 +128,6 @@ def pick_picks(ts,tt,min_proba_p,min_prob_s,sample_rate):
     return p_picks,s_picks,p_prob,s_prob
 
 
-base_folder='phase_30day'
-df=pd.read_csv('station.csv')
-date_folder = ['20201030','20201031']+ [str(i) for i in range(20201101,20201131)]
 
 for net, sta in zip(df['network'],df['station']):
     print(net,sta)
