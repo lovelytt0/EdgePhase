@@ -14,10 +14,14 @@ import os
 import pandas as pd
 
 
-download_folder = 'Data2/'
+download_folder = 'Data/'
+
+if not os.path.exists(download_folder):
+    os.makedirs(download_folder)
+
 df=pd.read_csv('station.csv')
 download_start = UTCDateTime("2020-11-16")
-days = 15
+days = 1
 
 for day in range(days):
     tmp=download_start+3600*24*day
@@ -28,7 +32,7 @@ for day in range(days):
         os.mkdir(download_folder+folder)
     except OSError:
         print ("*Creation of the directory %s failed" % folder)
-    for i in [38]:#range(len(df['network'])):
+    for i in range(len(df['network'])):
         filling=df['channel'][i][:2]+'*'
         try:
             st=Client(df['client'][i]).get_waveforms(df['network'][i],df['station'][i], "*", filling ,tmp, tmp+3600*24).merge(method=1, fill_value='interpolate')
