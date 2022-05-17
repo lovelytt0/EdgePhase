@@ -151,7 +151,7 @@ def _make_dir(output_name):
         if os.path.isdir(save_dir):
             shutil.rmtree(save_dir)  
         os.makedirs(save_models)
-        shutil.copyfile('EdgeConv/trainerMulti.py',os.path.join(save_dir,'trainerEQT.py'))
+        shutil.copyfile('EdgeConv/trainerBaselineA.py',os.path.join(save_dir,'trainerBaselineA.py'))
     return save_dir, save_models
 
 

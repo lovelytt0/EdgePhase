@@ -74,15 +74,13 @@ class DataGeneratorMulti(torch.utils.data.Dataset):
 
     def __getitem__(self, index):
         'Generate one batch of data'
-
         X, y, edge_index = self._data_generation(self.list_IDs[index])
         return torch.tensor(X, dtype=torch.float),torch.tensor(y, dtype=torch.float), torch.tensor(edge_index), self.list_IDs[index]
     
-    def testitem(self, index):        
+    def testitem(self, index):     
     	'Generate one batch of test data'
-
-        X, y, edge_index,select_keys = self._testdata_generation(self.list_IDs[index])
-        return torch.tensor(X, dtype=torch.float),torch.tensor(y, dtype=torch.float), torch.tensor(edge_index), self.list_IDs[index], select_keys
+    	X, y, edge_index,select_keys = self._testdata_generation(self.list_IDs[index])
+    	return torch.tensor(X, dtype=torch.float),torch.tensor(y, dtype=torch.float), torch.tensor(edge_index), self.list_IDs[index], select_keys
     
 
     def on_epoch_end(self):
