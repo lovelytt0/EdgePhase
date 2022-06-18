@@ -44,6 +44,8 @@ class DataGeneratorMulti(torch.utils.data.Dataset):
     augmentation: bool, default=True
         If True, half of each batch will be augmented version of the other half.
             
+    dis_th: bool, default=1
+        Distance threthold to build edges.
     """   
     
     def __init__(self, 
@@ -53,7 +55,8 @@ class DataGeneratorMulti(torch.utils.data.Dataset):
                  batch_size=1, 
                  shuffle=True, 
                  norm_mode = 'std',
-                 augmentation = False,                  
+                 augmentation = False,  
+                 dis_th = 1
                  ):
        
         'Initialization'
@@ -63,7 +66,9 @@ class DataGeneratorMulti(torch.utils.data.Dataset):
         self.file_name = file_name        
         self.shuffle = shuffle
         self.norm_mode = norm_mode
-        self.augmentation = augmentation   
+        self.augmentation = augmentation  
+        self.dis_th = dis_th   
+
         self.on_epoch_end()
 
 
@@ -212,7 +217,7 @@ class DataGeneratorMulti(torch.utils.data.Dataset):
         for i in range(key_nb):
             for j in range(key_nb):
                 dis = locations2degrees(loc[i,0],loc[i,1],loc[j,0],loc[j,1])
-                if dis < 1:
+                if dis < self.dis_th:
                     row_a.append(i)
                     row_b.append(j)
         edge_index=[row_a,row_b]
@@ -299,7 +304,7 @@ class DataGeneratorMulti(torch.utils.data.Dataset):
         for i in range(key_nb):
             for j in range(key_nb):
                 dis = locations2degrees(loc[i,0],loc[i,1],loc[j,0],loc[j,1])
-                if dis < 1:
+                if dis < self.dis_th:
                     row_a.append(i)
                     row_b.append(j)
         edge_index=[row_a,row_b]

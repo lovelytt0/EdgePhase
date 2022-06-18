@@ -27,10 +27,7 @@ import seisbench.models as sbm
 
 
 from tqdm import tqdm
-def cycle(loader):
-    while True:
-        for data in loader:
-            yield data
+
 
 def conv_block(n_in, n_out, k, stride ,padding, activation, dropout=0):
     if activation:
@@ -54,7 +51,8 @@ def trainerBaselineA(input_hdf5=None,
             batch_size=1,
             epochs=200, 
             monitor='val_loss',
-            patience=3):
+            patience=3,
+            dis_th=1):
     
 
     args = {
@@ -69,7 +67,9 @@ def trainerBaselineA(input_hdf5=None,
     "batch_size": batch_size,
     "epochs": epochs,
     "monitor": monitor,
-    "patience": patience                    
+    "patience": patience,
+    "dis_th": dis_th
+
     }
     
     save_dir, save_models=_make_dir(args['output_name'])
@@ -84,14 +84,18 @@ def trainerBaselineA(input_hdf5=None,
                       'batch_size': 1,
                       'shuffle': args['shuffle'],  
                       'norm_mode': args['normalization_mode'],
-                      'augmentation': args['augmentation']}
+                      'augmentation': args['augmentation'],
+                      'dis_th': args['dis_th']
+                      }
 
     params_validation = {'file_name': str(args['input_hdf5']),  
                          'dim': args['input_dimention'][0],
                          'batch_size': 1,
                          'shuffle': False,  
                          'norm_mode': args['normalization_mode'],
-                         'augmentation': False}         
+                         'augmentation': False,
+                         'dis_th': args['dis_th']
+                        }         
 
 
     model = sbm.EQTransformer.from_pretrained("original")
@@ -105,11 +109,11 @@ def trainerBaselineA(input_hdf5=None,
     early_stopping = EarlyStopping(monitor=monitor,patience=args['patience']) # patience=3
     tb_logger = pl_loggers.TensorBoardLogger(save_dir)
 
-    trainer = pl.Trainer(precision=16, gpus=1, gradient_clip_val=0.5, accumulate_grad_batches=8, callbacks=[early_stopping, checkpoint_callback],check_val_every_n_epoch=1,profiler="simple",num_sanity_val_steps=0, logger =tb_logger)
+    trainer = pl.Trainer(precision=16, gpus=1, gradient_clip_val=0.5, accumulate_grad_batches=args['batch_size'], callbacks=[early_stopping, checkpoint_callback],check_val_every_n_epoch=1,profiler="simple",num_sanity_val_steps=0, logger =tb_logger)
 
-    train_loader  = DataLoader(training_generator, batch_size = args['batch_size'], num_workers=8, pin_memory=True, prefetch_factor=5)
+    train_loader  = DataLoader(training_generator, batch_size = 1, num_workers=8, pin_memory=True, prefetch_factor=5)
 
-    val_loader   = DataLoader(validation_generator, batch_size = args['batch_size'], num_workers=8, pin_memory=True, prefetch_factor=5)
+    val_loader   = DataLoader(validation_generator, batch_size = 1, num_workers=8, pin_memory=True, prefetch_factor=5)
     
     
     
