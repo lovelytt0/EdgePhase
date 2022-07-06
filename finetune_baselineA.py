@@ -13,7 +13,8 @@ training_generator = trainerBaselineA(input_hdf5='../gMLP_phase/Dataset_builder'
         output_name='model_baselineA', 
         augmentation = True,
         normalization_mode='std',
-        batch_size = 1,
+        batch_size = 32,
         epochs=200,
         monitor='val_loss',
-        patience=15)
+        patience=15,
+        dis_th=2)

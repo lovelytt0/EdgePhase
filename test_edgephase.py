@@ -19,10 +19,10 @@ from EdgeConv.DataGeneratorMulti import DataGeneratorMulti
 from EdgeConv.Utils import _detect_peaks
 import pickle
 
-dis_th = 2
-output_name ='./Test_diff_dist'
+dis_th = 0.1
+output_name ='./Test_diff_dist_200km'
 input_testset = '../gMLP_phase/Dataset_builder/test.npy'
-gnn_weight_path = './models/Edgephase_step=52121.ckpt'
+gnn_weight_path = './models/Edgephase_200km_step=24989.ckpt'
 
 print('Loading the model ...', flush=True)        
 test = np.load(input_testset)
@@ -38,8 +38,8 @@ test_generator = DataGeneratorMulti(list_IDs=test,**params_test)
 eqt_model = sbm.EQTransformer.from_pretrained("original")
 eqt_model.eval()
 gnn_model = Graphmodel(eqt_model)
-# state = torch.load(gnn_weight_path)['state_dict']
-state = torch.load(gnn_weight_path, map_location=torch.device('cpu'))['state_dict']
+state = torch.load(gnn_weight_path)['state_dict']
+#state = torch.load(gnn_weight_path, map_location=torch.device('cpu'))['state_dict']
 
 gnn_model.load_state_dict( state_dict = state)
 gnn_model.eval()
