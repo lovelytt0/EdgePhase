@@ -1,4 +1,11 @@
 # EdgePhase
+
+- EdgeConv 
+  - DataGeneratorMulti.py 
+  - Utils.py
+  - trainerBaselineA.py
+  - trainerEdgePhase.py
+
 1) download HiNet data : add new download file (reuse code from SCSN)
 2) download JMA catalog : " check for phase data, data format difference (https://scedc.caltech.edu/data/cloud.html#waveforms)
 3) install pyg (fix version mismatch problem, https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html)
