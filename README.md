@@ -1,5 +1,7 @@
 # EdgePhase
 
+- EdgePhase_tutorial.ipynb [a tutorial on google colab]
+
 - EdgeConv [package of EdgePhase]
   - DataGeneratorMulti.py [data generator]
   - Utils.py [function of picking P/S phases based on the  probability]
@@ -23,5 +25,4 @@
 - SCSN2021Dataset [code to build training/validation dataset]
 - models [contains the weights of trained models]
 
-- EdgePhase_tutorial.ipynb [a tutorial on google colab]
 - finetune_baselineA.py, finetune_edgephase.py, test_edgephase.py [scripts to train/test models]
