@@ -12,17 +12,13 @@
       -  EdgePhase_cat.csv [catalog of EdgePhase]
       -  catalog_visualization.ipynb [notebook for visualization]
   -  EqLocation [softwares/control files for earthquake location]
-      -  REAL
-      -  VELEST
-      -  HypoDD
-      Please reference github repo by Miao Zhang (https://github.com/Dal-mzhang/REAL) for more details 
-      or a more comprehensive workflow (https://github.com/Dal-mzhang/LOC-FLOW)
-
-
-
+      -  Includes subfolder 'REAL', 'VELEST', and 'HypoDD'
+      -  Please reference the github repo by Miao Zhang (https://github.com/Dal-mzhang/REAL) for more details 
+      -  Or reference a more comprehensive workflow (https://github.com/Dal-mzhang/LOC-FLOW)
+      
   - download.py, preprocess.py, run_EdgePhase.py, pick_phase.py [scripts to use EdgePhase for case study]
   - magnitude_estimation.py [magnitude estimation code]
-  - station.csv, edge_index.pt [station data]
+  - station.csv, edge_index.pt [station meta_data]
  
 - SCSN2021Dataset [code to build training/validation dataset]
 - models [contains the weights of trained models]
